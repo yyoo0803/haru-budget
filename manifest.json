@@ -1,0 +1,1 @@
+{"name": "하루예산", "short_name": "하루예산", "start_url": ".", "display": "standalone", "background_color": "#E7EEF7", "theme_color": "#1E6BFF", "icons": [{"src": "icon.png", "sizes": "512x512", "type": "image/png"}]}
