@@ -172,14 +172,17 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus
 .sheet{overflow-x:hidden}
 .kpad{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.15)}
 .kpad .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.kpad .bar{display:flex;justify-content:space-between;align-items:center;grid-column:1/-1;padding:2px 6px 4px;height:auto;background:none;overflow:visible}
-.kpad .bar span{font-size:13px;color:var(--ink3);font-weight:600}
-.kpad .bar button{border:0;background:none;color:var(--accent);font-weight:700;font-size:16px;padding:6px 8px}
+.kpad .bar{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;grid-column:1/-1;padding:4px 8px 8px;height:auto;background:none;overflow:visible;border-radius:0}
+.kpad .kl{font-size:12px;color:var(--ink3);font-weight:600}
+.kpad .kv{font-size:30px;font-weight:800;letter-spacing:-.8px;line-height:1.15;color:var(--ink);font-family:"Outfit","IBM Plex Sans KR",sans-serif;word-break:break-all}
+.kpad .kv small{font-size:17px;font-weight:700;margin-left:2px}
+.kpad .kk{font-size:13px;color:var(--accent);font-weight:600;min-height:18px}
+.kpad .bar button{border:0;background:var(--primary);color:var(--on-primary);font-weight:700;font-size:15px;padding:10px 16px;border-radius:12px;flex:none}
 .kpad .k{border:0;border-radius:12px;height:52px;font-size:24px;font-weight:600;background:var(--card);color:var(--ink);font-family:"Outfit","IBM Plex Sans KR",sans-serif;touch-action:manipulation;box-shadow:0 1px 0 rgba(0,0,0,.15)}
 .kpad .k:active{background:var(--soft)}
 .kpad .k.fn{background:var(--soft);font-size:20px}
 .kpad .k .ic{width:26px;height:26px}
-body.kb .sheet{padding-bottom:300px}
+body.kb .sheet{padding-bottom:380px}
 .half{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .half .btn{width:100%;padding:15px;font-size:15px}
 .half .btn.del{background:var(--bad-soft);color:var(--bad)}
@@ -232,7 +235,7 @@ textarea{resize:vertical;min-height:120px;line-height:1.55}
 <nav class="nav" id="nav" aria-label="메뉴"></nav>
 <div id="sheetSlot"></div>
 <div id="toastSlot"></div>
-<div class="kpad" id="kpad" hidden><div class="in"><div class="bar"><span id="kpadLabel">금액 입력</span><button type="button" data-k="done">완료</button></div><button type="button" class="k" data-k="1">1</button><button type="button" class="k" data-k="2">2</button><button type="button" class="k" data-k="3">3</button><button type="button" class="k" data-k="4">4</button><button type="button" class="k" data-k="5">5</button><button type="button" class="k" data-k="6">6</button><button type="button" class="k" data-k="7">7</button><button type="button" class="k" data-k="8">8</button><button type="button" class="k" data-k="9">9</button><button type="button" class="k fn" data-k="000">000</button><button type="button" class="k" data-k="0">0</button><button type="button" class="k fn" data-k="back" aria-label="지우기"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M9 5h11v14H9l-6-7zM12.5 9.5l5 5M17.5 9.5l-5 5"/></svg></button></div></div>
+<div class="kpad" id="kpad" hidden><div class="in"><div class="bar"><div style="min-width:0"><div class="kl" id="kpadLabel">금액 입력</div><div class="kv num" id="kpadVal">0<small>원</small></div><div class="kk" id="kpadKor"></div></div><button type="button" data-k="done">완료</button></div><button type="button" class="k" data-k="1">1</button><button type="button" class="k" data-k="2">2</button><button type="button" class="k" data-k="3">3</button><button type="button" class="k" data-k="4">4</button><button type="button" class="k" data-k="5">5</button><button type="button" class="k" data-k="6">6</button><button type="button" class="k" data-k="7">7</button><button type="button" class="k" data-k="8">8</button><button type="button" class="k" data-k="9">9</button><button type="button" class="k fn" data-k="000">000</button><button type="button" class="k" data-k="0">0</button><button type="button" class="k fn" data-k="back" aria-label="지우기"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M9 5h11v14H9l-6-7zM12.5 9.5l5 5M17.5 9.5l-5 5"/></svg></button></div></div>
 
 <script>
 (function(){
@@ -596,8 +599,11 @@ document.addEventListener("keydown",e=>{
 /* ---------- money keypad (000 키가 있는 숫자패드) ---------- */
 const kpad=document.getElementById("kpad");let kTarget=null,kHide=null;
 function showPad(t){clearTimeout(kHide);if(kTarget&&kTarget!==t)kTarget.classList.remove("kfocus");kTarget=t;kpad.hidden=false;document.body.classList.add("kb");
-  document.getElementById("kpadLabel").textContent=t.id==="s_amt"?"지출 금액":"예산 금액";
-  setTimeout(()=>t.scrollIntoView({block:"center",behavior:"smooth"}),50)}
+  let label="지출 금액";if(t.id.startsWith("pi_b_")){const nm=document.getElementById("pi_n_"+t.id.slice(5));label=((nm&&nm.value.trim())||"항목")+" 예산"}
+  document.getElementById("kpadLabel").textContent=label;updPad();
+  setTimeout(()=>{const sh=t.closest(".sheet");if(!sh)return;const r=t.getBoundingClientRect();const limit=window.innerHeight-kpad.offsetHeight-16;if(r.bottom>limit)sh.scrollBy({top:r.bottom-limit+8,behavior:"smooth"});else if(r.top<60)sh.scrollBy({top:r.top-80,behavior:"smooth"})},60)}
+function korMoney(n){if(!n)return "";const e=Math.floor(n/1e8),m=Math.floor(n%1e8/1e4),r=n%1e4;const out=[];if(e)out.push(e.toLocaleString("ko-KR")+"억");if(m)out.push(m.toLocaleString("ko-KR")+"만");if(r)out.push(r.toLocaleString("ko-KR"));return out.join(" ")+"원"}
+function updPad(){if(!kTarget)return;const n=moneyVal(kTarget.value);document.getElementById("kpadVal").innerHTML=won(n)+"<small>원</small>";document.getElementById("kpadKor").textContent=korMoney(n)}
 function hidePad(){kpad.hidden=true;document.body.classList.remove("kb");kTarget=null}
 document.addEventListener("focusin",e=>{const t=e.target;if(t.hasAttribute&&t.hasAttribute("data-money"))showPad(t)});
 document.addEventListener("focusout",e=>{if(e.target===kTarget){kHide=setTimeout(()=>{const a=document.activeElement;if(!(a&&a.hasAttribute&&a.hasAttribute("data-money")))hidePad()},150)}});
@@ -610,7 +616,7 @@ kpad.addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b||!k
   else if(k==="000"){if(!cur||cur==="0"){t.focus();return}cur+="000"}
   else cur=(cur==="0"?"":cur)+k;
   if(cur.length>13)return;
-  const n=Number(cur)||0;t.value=cur?won(n):"";t.dispatchEvent(new Event("input",{bubbles:true}));t.focus()});
+  const n=Number(cur)||0;t.value=cur?won(n):"";t.dispatchEvent(new Event("input",{bubbles:true}));updPad();t.focus()});
 init();
 })();
 </script>
