@@ -169,6 +169,22 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus
 .btn{border:0;background:var(--soft);border-radius:14px;padding:11px 16px;font-size:14px;font-weight:700;color:var(--ink)}
 .btn.primary{background:var(--primary);color:var(--on-primary)}
 .btn.danger{background:none;color:var(--bad);padding-inline:6px}
+.sheet{overflow-x:hidden}
+.kpad{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.15)}
+.kpad .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.kpad .bar{display:flex;justify-content:space-between;align-items:center;grid-column:1/-1;padding:2px 6px 4px;height:auto;background:none;overflow:visible}
+.kpad .bar span{font-size:13px;color:var(--ink3);font-weight:600}
+.kpad .bar button{border:0;background:none;color:var(--accent);font-weight:700;font-size:16px;padding:6px 8px}
+.kpad .k{border:0;border-radius:12px;height:52px;font-size:24px;font-weight:600;background:var(--card);color:var(--ink);font-family:"Outfit","IBM Plex Sans KR",sans-serif;touch-action:manipulation;box-shadow:0 1px 0 rgba(0,0,0,.15)}
+.kpad .k:active{background:var(--soft)}
+.kpad .k.fn{background:var(--soft);font-size:20px}
+.kpad .k .ic{width:26px;height:26px}
+body.kb .sheet{padding-bottom:300px}
+.half{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.half .btn{width:100%;padding:15px;font-size:15px}
+.half .btn.del{background:var(--bad-soft);color:var(--bad)}
+input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-height:48px;max-width:100%;text-align:left}
+input[type=date]::-webkit-date-and-time-value{text-align:left}
 .btn.wide{width:100%;padding:15px;font-size:15px}
 .btnrow{display:flex;gap:8px;align-items:center}
 .sticky{position:sticky;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:4}
@@ -216,6 +232,7 @@ textarea{resize:vertical;min-height:120px;line-height:1.55}
 <nav class="nav" id="nav" aria-label="메뉴"></nav>
 <div id="sheetSlot"></div>
 <div id="toastSlot"></div>
+<div class="kpad" id="kpad" hidden><div class="in"><div class="bar"><span id="kpadLabel">금액 입력</span><button type="button" data-k="done">완료</button></div><button type="button" class="k" data-k="1">1</button><button type="button" class="k" data-k="2">2</button><button type="button" class="k" data-k="3">3</button><button type="button" class="k" data-k="4">4</button><button type="button" class="k" data-k="5">5</button><button type="button" class="k" data-k="6">6</button><button type="button" class="k" data-k="7">7</button><button type="button" class="k" data-k="8">8</button><button type="button" class="k" data-k="9">9</button><button type="button" class="k fn" data-k="000">000</button><button type="button" class="k" data-k="0">0</button><button type="button" class="k fn" data-k="back" aria-label="지우기"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M9 5h11v14H9l-6-7zM12.5 9.5l5 5M17.5 9.5l-5 5"/></svg></button></div></div>
 
 <script>
 (function(){
@@ -476,14 +493,14 @@ function drawSheet(){
     const goalPick=s.fixed&&!s.edit?"":`<div class="field">목표<div class="chips">${state.projects.map(x=>`<button type="button" class="chip" data-a="s-proj" data-id="${x.id}" aria-pressed="${s.pid===x.id}">${ic(x.icon)}${esc(x.name)}</button>`).join("")}</div></div>`;
     slot.innerHTML=`<div class="scrim" data-a="s-close"><form class="sheet" id="sheetForm" role="dialog" aria-label="지출 기록">
     <div class="shead"><div><div class="aside">${esc(p?.name||"")}</div><h3>${s.edit?"지출 수정":"지출 기록"}</h3></div>${xbtn}</div>
-    <div style="display:flex;flex-direction:column;gap:10px"><label class="amount-wrap"><input class="amount-in num" id="s_amt" inputmode="numeric" data-money placeholder="0" value="${s.amount?won(s.amount):""}" aria-label="금액"><span>원</span></label>
+    <div style="display:flex;flex-direction:column;gap:10px"><label class="amount-wrap"><input class="amount-in num" id="s_amt" inputmode="none" data-money placeholder="0" value="${s.amount?won(s.amount):""}" aria-label="금액"><span>원</span></label>
     <div class="quick">${[["10000","+1만"],["50000","+5만"],["100000","+10만"],["1000000","+100만"],["0","지우기"]].map(([v,l])=>`<button type="button" data-a="s-q" data-v="${v}">${l}</button>`).join("")}</div></div>
     ${goalPick}
     <div class="field">세부 항목<div class="chips wrapchips">${(p?.items||[]).map((it,i)=>`<button type="button" class="chip" data-a="s-item" data-id="${it.id}" aria-pressed="${s.item===it.id}"><span class="dot" style="background:${PALETTE[i%PALETTE.length]}"></span>${esc(it.name)}</button>`).join("")||'<span class="aside">이 목표에 항목이 없어요</span>'}</div></div>
     <label class="field">날짜<input type="date" id="s_date" value="${s.date}"></label>
     <label class="field">메모<textarea id="s_memo" rows="5" placeholder="예: 스냅 예약금, 계좌이체, 잔금은 행사 당일">${esc(s.memo)}</textarea></label>
     ${s.confirm?`<div class="confirm"><span>이 지출을 삭제할까요?</span><span class="btnrow"><button type="button" class="btn" data-a="s-delno">취소</button><button type="button" class="btn primary" data-a="s-delyes">삭제</button></span></div>`:""}
-    <div class="btnrow">${s.edit?`<button type="button" class="btn danger" data-a="s-del">삭제</button>`:""}<button type="submit" class="btn primary wide">${s.edit?"저장":"기록하기"}</button></div></form></div>`;
+    ${s.edit?`<div class="half"><button type="button" class="btn del" data-a="s-del">삭제</button><button type="submit" class="btn primary">저장</button></div>`:`<button type="submit" class="btn primary wide">기록하기</button>`}</form></div>`;
   }else{
     const total=s.items.reduce((a,i)=>a+Number(i.budget||0),0);
     slot.innerHTML=`<div class="scrim" data-a="s-close"><form class="sheet" id="projForm" role="dialog" aria-label="목표 편집">
@@ -493,11 +510,11 @@ function drawSheet(){
     <div class="field">색상<div class="pickgrid" style="grid-template-columns:repeat(9,1fr)">${Object.keys(GCOL).map(g=>`<button type="button" class="cpick" style="background:${GCOL[g]}" data-a="pj-grad" data-v="${g}" aria-pressed="${s.grad===g}" aria-label="${g}"></button>`).join("")}</div></div>
     <label class="field">목표 날짜 (선택)<input type="date" id="pj_date" value="${s.date}"></label>
     <div class="field">세부 항목과 예산
-      <div style="display:flex;flex-direction:column;gap:6px">${s.items.map((it,i)=>`<div class="irow"><input type="text" id="pi_n_${i}" value="${esc(it.name)}" placeholder="항목 이름"><input inputmode="numeric" class="num" id="pi_b_${i}" data-money value="${it.budget?won(it.budget):""}" placeholder="예산" style="text-align:right"><button type="button" class="x" data-a="pj-rm" data-idx="${i}" aria-label="항목 삭제">×</button></div>`).join("")}</div>
+      <div style="display:flex;flex-direction:column;gap:6px">${s.items.map((it,i)=>`<div class="irow"><input type="text" id="pi_n_${i}" value="${esc(it.name)}" placeholder="항목 이름"><input inputmode="none" class="num" id="pi_b_${i}" data-money value="${it.budget?won(it.budget):""}" placeholder="예산" style="text-align:right"><button type="button" class="x" data-a="pj-rm" data-idx="${i}" aria-label="항목 삭제">×</button></div>`).join("")}</div>
       <button type="button" class="btn" data-a="pj-add" style="align-self:flex-start;padding:8px 14px;font-size:13px">+ 항목 추가</button>
       <div class="totalrow"><span>목표 예산 합계</span><b class="num" id="pj_total">${won(total)}원</b></div></div>
     ${s.confirm?`<div class="confirm"><span>'${esc(s.name)}' 목표와 모든 기록을 지울까요?</span><span class="btnrow"><button type="button" class="btn" data-a="pj-delno">취소</button><button type="button" class="btn primary" data-a="pj-delyes">삭제</button></span></div>`:""}
-    <div class="btnrow">${s.isNew?"":`<button type="button" class="btn danger" data-a="pj-del">삭제</button>`}<button type="submit" class="btn primary wide">${s.isNew?"만들기":"저장"}</button></div></form></div>`;
+    ${s.isNew?`<button type="submit" class="btn primary wide">만들기</button>`:`<div class="half"><button type="button" class="btn del" data-a="pj-del">삭제</button><button type="submit" class="btn primary">저장</button></div>`}</form></div>`;
   }
 }
 function readTx(){const a=document.getElementById("s_amt");if(!a)return;sheet.amount=moneyVal(a.value);sheet.memo=document.getElementById("s_memo").value;sheet.date=document.getElementById("s_date").value||sheet.date}
@@ -576,6 +593,24 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Escape"&&sheet){sheet=null;drawSheet();return}
   if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches("svg [data-a]")){e.preventDefault();e.target.dispatchEvent(new MouseEvent("click",{bubbles:true}))}
 });
+/* ---------- money keypad (000 키가 있는 숫자패드) ---------- */
+const kpad=document.getElementById("kpad");let kTarget=null,kHide=null;
+function showPad(t){clearTimeout(kHide);if(kTarget&&kTarget!==t)kTarget.classList.remove("kfocus");kTarget=t;kpad.hidden=false;document.body.classList.add("kb");
+  document.getElementById("kpadLabel").textContent=t.id==="s_amt"?"지출 금액":"예산 금액";
+  setTimeout(()=>t.scrollIntoView({block:"center",behavior:"smooth"}),50)}
+function hidePad(){kpad.hidden=true;document.body.classList.remove("kb");kTarget=null}
+document.addEventListener("focusin",e=>{const t=e.target;if(t.hasAttribute&&t.hasAttribute("data-money"))showPad(t)});
+document.addEventListener("focusout",e=>{if(e.target===kTarget){kHide=setTimeout(()=>{const a=document.activeElement;if(!(a&&a.hasAttribute&&a.hasAttribute("data-money")))hidePad()},150)}});
+kpad.addEventListener("pointerdown",e=>e.preventDefault());
+kpad.addEventListener("mousedown",e=>e.preventDefault());
+kpad.addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b||!kTarget)return;const k=b.dataset.k;const t=kTarget;
+  if(k==="done"){t.blur();hidePad();return}
+  let cur=String(t.value).replace(/[^\d]/g,"");
+  if(k==="back")cur=cur.slice(0,-1);
+  else if(k==="000"){if(!cur||cur==="0"){t.focus();return}cur+="000"}
+  else cur=(cur==="0"?"":cur)+k;
+  if(cur.length>13)return;
+  const n=Number(cur)||0;t.value=cur?won(n):"";t.dispatchEvent(new Event("input",{bubbles:true}));t.focus()});
 init();
 })();
 </script>
