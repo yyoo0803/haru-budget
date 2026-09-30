@@ -543,11 +543,24 @@ body{font-size:16px;padding-inline:18px;padding-bottom:calc(170px + env(safe-are
 .tile .tbar{background:var(--cell2);height:6px}
 
 /* resizable goal widgets */
-.tiles.gres{grid-template-columns:1fr 1fr;grid-auto-rows:var(--row,170px);grid-auto-flow:dense}
+.tiles.gres{grid-template-columns:repeat(12,1fr);grid-auto-rows:var(--u,24px);gap:10px;grid-auto-flow:dense}
 .tile.rt{aspect-ratio:auto;height:100%;position:relative;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:box-shadow .15s}
-.tile.rt.sz-w{grid-column:span 2}
-.tile.rt.sz-t{grid-row:span 2}
-.tile.rt.sz-l{grid-column:span 2;grid-row:span 2}
+.tile.rt.sz-i{grid-column:span 3;grid-row:span 3;padding:0;display:grid;place-items:center;border-radius:20px}
+.tile.rt.sz-c{grid-column:span 4;grid-row:span 4;padding:12px;border-radius:18px}
+.tile.rt.sz-s{grid-column:span 6;grid-row:span 6}
+.tile.rt.sz-w{grid-column:span 12;grid-row:span 6}
+.tile.rt.sz-t{grid-column:span 6;grid-row:span 12}
+.tile.rt.sz-l{grid-column:span 12;grid-row:span 12}
+.iconring{position:absolute;inset:9%}
+.iconring .ringfull{position:absolute;inset:0;width:100%;height:100%}
+.iconring .emo{position:absolute;inset:17%;width:auto!important;height:auto!important;background:var(--cell2)}
+.iconring .emo .mk{width:60%;height:60%}
+.sz-i .grip{width:22px;height:22px;right:2px;bottom:2px}.sz-i .grip svg{width:11px;height:11px}
+.sz-c .top{align-items:center}
+.sz-c .pc2s{font-size:13px;font-weight:800;color:var(--gtext)}
+.sz-c .nm1{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.3px}
+.sz-c .gbar{margin-top:6px;height:4px;margin-right:18px}
+.sz-c .grip{width:22px;height:22px;right:2px;bottom:2px}.sz-c .grip svg{width:11px;height:11px}
 .tile.rt .rbody{display:flex;flex-direction:column}
 .tile.rt.sz-w .nm,.tile.rt.sz-l .nm{font-size:20px}
 .tile.rt.sz-l .nm{font-size:24px}
@@ -700,7 +713,7 @@ const fmtDate=d=>{const t=new Date(d+"T00:00");return `${md(d)} ${WD[t.getDay()]
 const dayHead=d=>d===todayKey?`오늘 · ${md(d)}`:d===yday?`어제 · ${md(d)}`:fmtDate(d);
 function korMoney(n){if(!n)return "";const e=Math.floor(n/1e8),m=Math.floor(n%1e8/1e4),r=n%1e4;const out=[];if(e)out.push(e.toLocaleString("ko-KR")+"억");if(m)out.push(m.toLocaleString("ko-KR")+"만");if(r)out.push(r.toLocaleString("ko-KR"));return out.join(" ")+"원"}
 const padKeys=()=>["1","2","3","4","5","6","7","8","9","000","0","back"].map(k=>`<button type="button" data-k="${k}" ${k==="back"?'class="fn" aria-label="지우기"':k==="000"?'class="fn"':""}>${k==="back"?ic("del"):k}</button>`).join("");
-function ring(pct,color,label,size){const s=size||52,r=s/2-4,c=2*Math.PI*r,p=Math.max(0,Math.min(100,pct));
+function ring(pct,color,label,size){if(size===0){const r=46,c=2*Math.PI*r,p=Math.max(0,Math.min(100,pct));return `<svg class="ringfull" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--cell2)" stroke-width="5"/>${p>0?`<circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${(c*p/100).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 50 50)"/>`:""}</svg>`}const s=size||52,r=s/2-4,c=2*Math.PI*r,p=Math.max(0,Math.min(100,pct));
   return `<div class="ring" style="width:${s}px;height:${s}px"><svg viewBox="0 0 ${s} ${s}" style="width:${s}px;height:${s}px"><circle cx="${s/2}" cy="${s/2}" r="${r}" fill="none" stroke="var(--fill)" stroke-width="6"/>${p>0?`<circle cx="${s/2}" cy="${s/2}" r="${r}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${(c*p/100).toFixed(2)} ${c.toFixed(2)}"/>`:""}</svg><span>${label}</span></div>`}
 
 /* ---------- state ---------- */
@@ -813,7 +826,7 @@ function render(){
   document.getElementById("fabSlot").innerHTML=fab;
   sizeRows();
 }
-function sizeRows(){const g=document.getElementById("gres");if(!g)return;const w=g.clientWidth;g.style.setProperty("--row",((w-12)/2)+"px")}
+const GAP=10;function sizeRows(){const g=document.getElementById("gres");if(!g)return;const w=g.clientWidth;g.style.setProperty("--u",((w-11*GAP)/12)+"px")}
 window.addEventListener("resize",sizeRows);
 const pctF=v=>v<=0?"0":v<1?v.toFixed(1):String(Math.round(v));
 const bigMoney=n=>{n=Math.round(n);if(n>=1e8){const e=Math.floor(n/1e8),m=Math.round(n%1e8/1e4);return `${e.toLocaleString("ko-KR")}<small>억</small>${m?` ${m.toLocaleString("ko-KR")}<small>만원</small>`:"<small>원</small>"}`}if(n>=1e4)return `${Math.round(n/1e4).toLocaleString("ko-KR")}<small>만원</small>`;return `${n.toLocaleString("ko-KR")}<small>원</small>`};
@@ -821,14 +834,16 @@ function scrGoals(){
   const ps=state.projects;const v=ui.gview;const all=ps.map(pcalc);const B=all.reduce((s,c)=>s+c.budget,0),S=all.reduce((s,c)=>s+c.spent,0);
   let body;
   if(!ps.length)body="";
-  else if(v==="card")body=`<div class="tiles gres" id="gres">${ps.map(p=>{const c=pcalc(p);const sz=p.size||"s";return `<div class="tile rt sz-${sz}" data-a="open-proj" data-id="${p.id}" role="button" tabindex="0">
+  else if(v==="card")body=`<div class="tiles gres" id="gres">${ps.map(p=>{const c=pcalc(p);const sz=p.size||"s";const over=c.spent>c.budget;const grip=`<span class="grip" data-grip="${p.id}" aria-label="크기 조절" title="끌어서 크기 조절"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M14 6L6 14M14 10.5L10.5 14"/></svg></span>`;
+      if(sz==="i")return `<div class="tile rt sz-i" data-a="open-proj" data-id="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)} ${pctF(c.pct)}% 사용"><div class="iconring">${ring(c.pct,over?"var(--red)":"var(--green)","",0)}${emo(p.icon,40)}</div>${grip}</div>`;
+      if(sz==="c")return `<div class="tile rt sz-c" data-a="open-proj" data-id="${p.id}" role="button" tabindex="0"><div class="top">${emo(p.icon,36)}<span class="pc2s num">${pctF(c.pct)}%</span></div><div class="rbody"><div class="nm1">${esc(p.name)}</div><div class="gbar"><i style="width:${Math.min(100,c.pct)}%;${over?"background:var(--red)":""}"></i></div></div>${grip}</div>`;
+      return `<div class="tile rt sz-${sz}" data-a="open-proj" data-id="${p.id}" role="button" tabindex="0">
       <div class="top">${emo(p.icon,sz==="l"?64:48)}<span class="pill">${pctF(c.pct)}%</span></div>
       <div class="rbody"><div class="nm">${esc(p.name)}</div><div class="am am1 num">${short(c.spent)} / ${short(c.budget)}원</div>
       ${sz!=="s"?`<div class="gc-row num"><span><b>${short(c.spent)}원</b> 사용</span><span>${c.left<0?`<b style="color:var(--red)">${short(-c.left)}원</b> 초과`:`<b>${short(c.left)}원</b> 남음`}</span></div>`:""}
       ${p.date&&(sz==="l"||sz==="t")?`<div class="am">${fmtDate(p.date)} · ${dday(p.date)}</div>`:""}
-      <div class="gbar"><i style="width:${Math.min(100,c.pct)}%;${c.spent>c.budget?"background:var(--red)":""}"></i></div></div>
-      <span class="grip" data-grip="${p.id}" aria-label="크기 조절" title="끌어서 크기 조절"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M14 6L6 14M14 10.5L10.5 14"/></svg></span></div>`}).join("")}</div>
-      <div class="rhint">카드 오른쪽 아래 모서리를 끌면 크기를 바꿀 수 있어요</div>`;
+      <div class="gbar"><i style="width:${Math.min(100,c.pct)}%;${over?"background:var(--red)":""}"></i></div></div>${grip}</div>`}).join("")}</div>
+      <div class="rhint">카드 오른쪽 아래 모서리를 끌어서 크기를 바꿔요 · 끝까지 줄이면 아이콘만 보여요</div>`;
   else body=`<div class="glist">${ps.map(p=>{const c=pcalc(p);return `<button class="gc" data-a="open-proj" data-id="${p.id}">
       <div class="gc-top">${emo(p.icon,52)}<div class="gc-t"><b>${esc(p.name)}</b><span class="num">예산 ${short(c.budget)}원${p.date?` · ${dday(p.date)}`:""}${p.example?" · 예시":""}</span></div><span class="pill${c.spent>c.budget?" over":""}">${pctF(c.pct)}% 사용</span></div>
       <div class="gc-row num"><span><b>${short(c.spent)}원</b> 사용</span><span>${c.left<0?`<b style="color:var(--red)">${short(-c.left)}원</b> 초과`:`<b>${short(c.left)}원</b> 남음`}</span></div>
@@ -1226,10 +1241,10 @@ kpad.addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b||!k
 /* ---------- widget-style resize ---------- */
 let rz=null;
 document.addEventListener("pointerdown",e=>{const h=e.target.closest("[data-grip]");if(!h)return;e.preventDefault();e.stopPropagation();
-  const tile=h.closest(".tile");const g=document.getElementById("gres");const r=tile.getBoundingClientRect();const row=parseFloat(getComputedStyle(g).getPropertyValue("--row"))||r.width;
-  rz={id:h.dataset.grip,tile,x0:r.left,y0:r.top,row,col:(g.clientWidth-12)/2,size:tile.className.match(/sz-(\w)/)[1],moved:false};tile.classList.add("resizing");h.setPointerCapture&&h.setPointerCapture(e.pointerId)},{passive:false});
-document.addEventListener("pointermove",e=>{if(!rz)return;e.preventDefault();const w=e.clientX-rz.x0,h=e.clientY-rz.y0;rz.moved=true;
-  const wide=w>rz.col*1.45,tall=h>rz.row*1.45;const sz=wide&&tall?"l":wide?"w":tall?"t":"s";
+  const tile=h.closest(".tile");const g=document.getElementById("gres");const r=tile.getBoundingClientRect();const W=g.clientWidth;const u=(W-11*GAP)/12;const span=n=>n*u+(n-1)*GAP;
+  rz={id:h.dataset.grip,tile,x0:r.left,y0:r.top,W,span,size:tile.className.match(/sz-(\w)/)[1],moved:false};tile.classList.add("resizing");h.setPointerCapture&&h.setPointerCapture(e.pointerId)},{passive:false});
+document.addEventListener("pointermove",e=>{if(!rz)return;e.preventDefault();const w=e.clientX-rz.x0,h=e.clientY-rz.y0;rz.moved=true;const S=rz.span;
+  let sz;if(w<(S(3)+S(4))/2)sz="i";else if(w<(S(4)+S(6))/2)sz="c";else{const tall=h>(S(6)+S(12))/2;const wide=w>(S(6)+S(12))/2;sz=wide&&tall?"l":wide?"w":tall?"t":"s"}
   if(sz!==rz.size){rz.tile.classList.remove("sz-"+rz.size);rz.tile.classList.add("sz-"+sz);rz.size=sz;if(navigator.vibrate)try{navigator.vibrate(8)}catch(_){}}},{passive:false});
 function endRz(){if(!rz)return;const p=state.projects.find(x=>x.id===rz.id);const moved=rz.moved;rz.tile.classList.remove("resizing");
   if(p&&moved&&(p.size||"s")!==rz.size){p.size=rz.size;persist()}rz=null;window.__rzJust=moved;setTimeout(()=>{window.__rzJust=false},250);render()}
