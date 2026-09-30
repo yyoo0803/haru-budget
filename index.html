@@ -631,6 +631,23 @@ body{font-size:16px;padding-inline:18px;padding-bottom:calc(170px + env(safe-are
 .btnrow2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .btnrow2 .btn{font-size:15px;padding:12px}
 .allocc{margin-top:16px}
+
+.phwrap{margin-top:10px}
+.phrow{display:flex;gap:8px;flex-wrap:wrap}
+.thumb{width:64px;height:64px;border-radius:12px;border:1px solid var(--line);background:var(--cell2) center/cover no-repeat;padding:0;flex:none}
+.thumb.missing{opacity:.4}
+.thumb.add{display:grid;place-items:center;align-content:center;gap:1px;color:var(--label2);font-size:12px;font-weight:600;cursor:pointer;border-style:dashed;border-color:var(--fill2);background:transparent}
+.thumb.add .ic{width:22px;height:22px}
+.phmark{display:inline-flex;align-items:center;gap:1px;color:var(--gtext);font-size:12px;font-weight:700;margin-right:5px;vertical-align:-2px}
+.phmark .ic{width:15px;height:15px}
+.pview{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.92);display:grid;place-items:center;padding:60px 12px 30px}
+.pview img{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain}
+.pvbar{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:12px;right:12px;display:flex;justify-content:space-between}
+.pvb{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:99px;padding:9px 14px;display:flex;align-items:center;gap:6px;font-size:15px;font-weight:600}
+.pvb .ic{width:18px;height:18px}
+.pvb.red{color:#FF8A80}
+.txph{grid-column:2/-1;display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.thumb.sm{width:72px;height:72px;border-radius:10px;display:inline-block;cursor:zoom-in}
 </style>
 </head>
 <body>
@@ -677,6 +694,7 @@ const P={
 const GOAL_ICONS=["cake","house","ring","plane","car","gift","heart","baby","grad","paw","star","wallet"];
 
 P.cal="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4";
+P.camera="M4 8h3l2-3h6l2 3h3v11H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z";
 P.trash="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3";
 P.shield="M12 3l7 3v6c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6zM9 12l2 2 4-4";
 P.doc="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6";
@@ -812,7 +830,7 @@ function vbars(ns,bars,labelEvery){
 /* ---------- rows ---------- */
 function txRow(p,t,showGoal){const it=p.items.find(i=>i.id===t.itemId);
   const title=(t.memo||"").split("\n")[0]||it?.name||"지출";const col=showGoal?gc(p.grad):itemColor(p,t.itemId);
-  return `<button class="cellr" style="--inset:66px" data-a="tx-edit" data-pid="${p.id}" data-id="${t.id}">${emo(p.icon,38,col)}<div style="min-width:0"><div class="t1">${esc(title)}</div><div class="t2">${esc(showGoal?`${p.name} · ${it?.name||"항목 없음"}`:(it?.name||"항목 없음"))}</div></div><div class="val strong num" style="text-align:right">−${won(t.amount)}원${t.fx?`<div class="t2" style="margin:0">${fmtF(t.fx.cur,t.fx.amt)}</div>`:""}</div><span></span></button>`}
+  return `<button class="cellr" style="--inset:66px" data-a="tx-edit" data-pid="${p.id}" data-id="${t.id}">${emo(p.icon,38,col)}<div style="min-width:0"><div class="t1">${t.photos&&t.photos.length?`<span class="phmark">${ic("camera")}${t.photos.length>1?t.photos.length:""}</span>`:""}${esc(title)}</div><div class="t2">${esc(showGoal?`${p.name} · ${it?.name||"항목 없음"}`:(it?.name||"항목 없음"))}</div></div><div class="val strong num" style="text-align:right">−${won(t.amount)}원${t.fx?`<div class="t2" style="margin:0">${fmtF(t.fx.cur,t.fx.amt)}</div>`:""}</div><span></span>${t.photos&&t.photos.length?`<span class="txph">${t.photos.map(id=>`<span class="thumb sm" role="button" tabindex="0" data-a="ph-view" data-id="${id}" data-photo="${id}" aria-label="사진 크게 보기"></span>`).join("")}</span>`:""}</button>`}
 function groupByDate(list,rowFn){const g={};list.forEach(t=>(g[t.t.date]=g[t.t.date]||[]).push(t));
   return Object.keys(g).sort().reverse().map(d=>`<div class="ghead"><span>${dayHead(d)}</span><span class="num">−${won(g[d].reduce((s,x)=>s+Number(x.t.amount),0))}원</span></div><div class="group">`+g[d].map(rowFn).join("")+`</div>`).join("")}
 
@@ -824,7 +842,7 @@ function render(){
   if(ui.tab==="goals"&&ui.proj&&state.projects.find(p=>p.id===ui.proj)){s.innerHTML=scrProject();fab=`<div class="fabbar"><button class="fab" data-a="add-tx" data-pid="${ui.proj}">${ic("plus")}기록하기</button></div>`}
   else{if(ui.tab==="goals")ui.proj=null;s.innerHTML=ui.tab==="stats"?scrStats():scrGoals();if(ui.tab==="goals"&&state.projects.length)fab=`<div class="fabbar"><button class="fab" data-a="add-tx">${ic("plus")}기록하기</button></div>`}
   document.getElementById("fabSlot").innerHTML=fab;
-  sizeRows();
+  sizeRows();fillThumbs();
 }
 const GAP=10;function sizeRows(){const g=document.getElementById("gres");if(!g)return;const w=g.clientWidth;g.style.setProperty("--u",((w-11*GAP)/12)+"px")}
 window.addEventListener("resize",sizeRows);
@@ -968,9 +986,9 @@ function fxCard(p){const cur=curOf(p);if(cur==="KRW")return "";const c=CURS[cur]
 /* ---------- pages ---------- */
 let page=null,sheet=null;
 function openTx(o){
-  if(o&&o.edit)page={kind:"tx",...o,amt:o.fx?String(o.fx.amt):String(o.amount||""),cur:o.fx?o.fx.cur:"KRW",confirm:false,picker:null};
+  if(o&&o.edit)page={kind:"tx",...o,amt:o.fx?String(o.fx.amt):String(o.amount||""),cur:o.fx?o.fx.cur:"KRW",confirm:false,picker:null,photos:[...(o.photos||[])],orig:[...(o.photos||[])],added:[]};
   else{const p=(o&&o.pid&&state.projects.find(x=>x.id===o.pid))||state.projects[0];if(!p){toast("먼저 목표를 만들어 주세요");return}
-    const iid=(o&&o.item)||p.items[0]?.id||"";const it0=p.items.find(x=>x.id===iid);page={kind:"tx",id:uid(),pid:p.id,item:iid,amt:"",memo:"",date:todayKey,edit:false,confirm:false,picker:null,cur:it0&&it0.cur?icur(it0):curOf(p)}}
+    const iid=(o&&o.item)||p.items[0]?.id||"";const it0=p.items.find(x=>x.id===iid);page={kind:"tx",id:uid(),pid:p.id,item:iid,amt:"",memo:"",date:todayKey,edit:false,confirm:false,picker:null,photos:[],orig:[],added:[],cur:it0&&it0.cur?icur(it0):curOf(p)}}
   if(page.cur!=="KRW")loadRates();
   sheet=null;drawSheet();drawPage();
 }
@@ -1015,13 +1033,14 @@ function drawPage(){
         <button type="button" class="cellr" data-a="pick" data-v="item">${emo("x_tag",32)}<span class="t1">세부 항목</span><span class="val">${esc(it?.name||"선택")}</span>${ic("chev","chev")}</button>
         <label class="cellr">${emo("x_cal",32)}<span class="t1">날짜</span><span class="val" id="dateV">${md(s.date)}</span>${ic("chev","chev")}<input type="date" id="t_date" value="${s.date}" aria-label="날짜"></label>
         <div class="cellwrap" style="position:relative"><label class="memo" style="position:relative">${emo("x_memo",32)}<textarea id="t_memo" rows="1" placeholder="메모를 남겨보세요">${esc(s.memo)}</textarea></label></div>
+      </div><div class="phwrap">${photosHTML(s.photos||[])}
       </div>
       ${s.confirm?`<div class="confirm"><span>이 지출을 삭제할까요?</span><span style="display:flex;gap:8px"><button type="button" class="btn" style="padding:8px 14px;background:var(--fill)" data-a="t-delno">취소</button><button type="button" class="btn del" style="padding:8px 14px;background:var(--fill)" data-a="t-delyes">삭제</button></span></div>`:""}
       <div class="pad" id="tpad">${s.cur!=="KRW"&&CURS[s.cur].d?padKeys().replace('data-k="000" class="fn">000','data-k="." class="fn">.'):padKeys()}</div>
     </div>
     <div class="pf">${s.edit?`<div class="half"><button type="button" class="btn del" data-a="t-del">삭제</button><button type="button" class="btn prim" data-a="t-save">저장</button></div>`:`<button type="button" class="btn prim wide" data-a="t-save">저장하기</button>`}</div></div>
     ${s.picker?pickerHTML(s,p):""}`;
-    autoGrow(document.getElementById("t_memo"));
+    autoGrow(document.getElementById("t_memo"));fillThumbs();
   }else{
     slot.innerHTML=`<div class="page" role="dialog" aria-label="목표 편집"><div class="ph"><span></span><h3>${s.isNew?"새 목표":"목표 편집"}</h3>${close}</div>
     <div class="body">
@@ -1076,12 +1095,25 @@ function readProj(){const n=document.getElementById("pj_name");if(!n)return;cons
     if(pe&&page.total){const pc=Number(String(pe.value).replace(/[^\d.]/g,""))||0;it.pct=pc;const v=conv(allocInfo(page).p,page.total*pc/100,page.cur||"KRW",icur(it));it.budget=v==null?0:Math.round(v*(CURS[icur(it)].d?100:1))/(CURS[icur(it)].d?100:1)}
     else{it.budget=moneyVal(document.getElementById("pi_b_"+i).value);delete it.pct}})}
 function readFx(){const a=document.getElementById("fx_krw");if(!a)return;page.krw=moneyVal(a.value);page.foreign=moneyVal(document.getElementById("fx_for").value);const d=document.getElementById("fx_date");if(d&&d.value)page.date=d.value}
-function removeTx(id){for(const p of state.projects){const i=p.tx.findIndex(t=>t.id===id);if(i>-1)p.tx.splice(i,1)}}
+/* ---------- photos (IndexedDB) ---------- */
+let _db=null;function pdb(){return _db||(_db=new Promise((res,rej)=>{try{const r=indexedDB.open("haru-photos",1);r.onupgradeneeded=()=>r.result.createObjectStore("p");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}}))}
+async function ptx(mode,fn){const d=await pdb();return new Promise((res,rej)=>{const t=d.transaction("p",mode);const st=t.objectStore("p");let out;Promise.resolve(fn(st)).then(v=>{out=v});t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error)})}
+const photoPut=(id,blob)=>ptx("readwrite",st=>{st.put(blob,id)});
+const photoDel=ids=>ids&&ids.length?ptx("readwrite",st=>{ids.forEach(i=>st.delete(i))}).catch(()=>{}):Promise.resolve();
+function photoGet(id){return pdb().then(d=>new Promise(res=>{const r=d.transaction("p").objectStore("p").get(id);r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null)})).catch(()=>null)}
+const _purl={};async function photoURL(id){if(_purl[id])return _purl[id];const b=await photoGet(id);if(!b)return null;return _purl[id]=URL.createObjectURL(b)}
+function photoAll(){return pdb().then(d=>new Promise(res=>{const out={};const t=d.transaction("p");const c=t.objectStore("p").openCursor();c.onsuccess=()=>{const cur=c.result;if(cur){out[cur.key]=cur.value;cur.continue()}};t.oncomplete=()=>res(out);t.onerror=()=>res(out)})).catch(()=>({}))}
+function shrinkImage(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{const M=1400;let w=img.naturalWidth,h=img.naturalHeight;const k=Math.min(1,M/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);
+  const cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(img,0,0,w,h);URL.revokeObjectURL(url);cv.toBlob(b=>b?res(b):rej(new Error("x")),"image/jpeg",.78)};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("이미지를 읽지 못했어요"))};img.src=url})}
+async function fillThumbs(){for(const el of document.querySelectorAll("[data-photo]")){if(el.dataset.done)continue;el.dataset.done=1;const u=await photoURL(el.dataset.photo);if(u)el.style.backgroundImage=`url(${u})`;else el.classList.add("missing")}}
+function photosHTML(ids){return `<div class="phrow">${ids.map(id=>`<button type="button" class="thumb" data-a="ph-view" data-id="${id}" data-photo="${id}" aria-label="사진 보기"></button>`).join("")}${ids.length<6?`<label class="thumb add" aria-label="사진 추가">${ic("camera")}<span>${ids.length?"추가":"사진"}</span><input type="file" id="ph_in" accept="image/*" multiple hidden></label>`:""}</div>`}
+function openViewer(id,editable){const v=document.getElementById("dlgSlot");v.innerHTML=`<div class="pview" data-a="pv-close"><div class="pvbar"><button type="button" class="pvb" data-a="pv-close" aria-label="닫기">${ic("x")}</button>${editable?`<button type="button" class="pvb red" data-a="ph-del" data-id="${id}">${ic("trash")} 삭제</button>`:""}</div><img id="pv_img" alt="첨부 사진"></div>`;photoURL(id).then(u=>{const i=document.getElementById("pv_img");if(i&&u)i.src=u})}
+function removeTx(id){for(const p of state.projects){const i=p.tx.findIndex(t=>t.id===id);if(i>-1){const t=p.tx[i];p.tx.splice(i,1);return t}}return null}
 function commitTx(){
   readTx();const s=page;const val=Number(s.amt)||0;if(!val)return toast("금액을 입력해 주세요");
   const p=state.projects.find(x=>x.id===s.pid);if(!p)return toast("목표를 골라 주세요");if(!s.item)return toast("세부 항목을 골라 주세요");
   let amount=val,fx=null;if(s.cur&&s.cur!=="KRW"){const r=krwPer(p,s.cur);if(!r.rate)return toast("환율을 불러오지 못했어요. 원화로 입력하거나 환전 기록을 먼저 남겨 주세요");amount=Math.round(val*r.rate);fx={cur:s.cur,amt:val,rate:r.rate,src:r.src}}
-  removeTx(s.id);const t={id:s.id,itemId:s.item,date:s.date,amount,memo:s.memo.trim()};if(fx)t.fx=fx;p.tx.push(t);persist();
+  removeTx(s.id);const t={id:s.id,itemId:s.item,date:s.date,amount,memo:s.memo.trim()};if(fx)t.fx=fx;if(s.photos&&s.photos.length)t.photos=[...s.photos];p.tx.push(t);persist();photoDel((s.orig||[]).filter(x=>!(s.photos||[]).includes(x)));
   const msg=s.edit?"수정했어요":`${won(amount)}원 기록했어요`;page=null;drawPage();render();toast(msg);
 }
 function commitProj(){
@@ -1097,7 +1129,7 @@ function commitProj(){
 }
 
 /* ---------- sheets: item detail & backup ---------- */
-function drawSheet(){
+function drawSheet(){setTimeout(fillThumbs,0);
   const slot=document.getElementById("sheetSlot");const s=sheet;if(!s){slot.innerHTML="";return}
   if(s.kind==="conv"){const p=state.projects.find(x=>x.id===s.pid);const cur=curOf(p);const c=CURS[cur];const r=krwPer(p,cur);
     slot.innerHTML=`<div class="scrim" data-a="s-close"><div class="sheet" role="dialog" aria-label="환율 계산기"><div class="grab"></div><div class="shead"><h3>환율 계산기</h3><button type="button" class="cbtn" style="color:var(--label2)" data-a="s-close" aria-label="닫기">${ic("x")}</button></div>
@@ -1126,12 +1158,15 @@ function drawSheet(){
   </div></div>`;
 }
 function exportData(){
-  const blob=new Blob([JSON.stringify({app:"haru-budget",version:2,exportedAt:new Date().toISOString(),state},null,1)],{type:"application/json"});const url=URL.createObjectURL(blob);
+  photoAll().then(async all=>{const photos={};for(const k in all){photos[k]=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(all[k])})}saveBackup({app:"haru-budget",version:3,exportedAt:new Date().toISOString(),state,photos})});
+}
+function saveBackup(obj){
+  const blob=new Blob([JSON.stringify(obj)],{type:"application/json"});const url=URL.createObjectURL(blob);
   const a=document.createElement("a");a.href=url;a.download=`하루예산_백업_${todayKey}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
   try{localStorage.setItem("hr_lastbackup",todayKey)}catch(e){}toast("백업 파일을 저장했어요");if(sheet)drawSheet();
 }
 function importData(file){const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);const st=j.state||j;if(!st||!Array.isArray(st.projects))throw 0;
-  state={categories:[],months:{},example:false,projects:[],projSeeded:true,...st};persist();sheet=null;drawSheet();ui.proj=null;render();toast("백업을 불러왔어요")}catch(e){toast("하루예산 백업 파일이 아니에요")}};r.readAsText(file)}
+  state={categories:[],months:{},example:false,projects:[],projSeeded:true,...st};persist();if(j.photos){for(const k in j.photos){fetch(j.photos[k]).then(r=>r.blob()).then(b=>photoPut(k,b)).catch(()=>{})}}sheet=null;drawSheet();ui.proj=null;render();toast("백업을 불러왔어요")}catch(e){toast("하루예산 백업 파일이 아니에요")}};r.readAsText(file)}
 function askDelete(title,msg,yes,okLabel){document.getElementById("dlgSlot").innerHTML=`<div class="dlgscrim" data-a="dlg-no"><div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgT"><div class="dlgb"><div class="dlgic">${ic("trash")}</div><h4 id="dlgT">${title}</h4><p>${msg}</p></div><div class="dlgbtns"><button type="button" data-a="dlg-no">취소</button><button type="button" class="red" data-a="${yes}" data-dlg="1">${okLabel||"삭제"}</button></div></div></div>`;setTimeout(()=>document.querySelector('.dlg [data-a="dlg-no"]')?.focus(),30)}
 function closeDlg(){document.getElementById("dlgSlot").innerHTML=""}
 function toast(t){const s=document.getElementById("toastSlot");s.innerHTML=`<div class="toast">${esc(t)}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>s.innerHTML="",1800)}
@@ -1156,8 +1191,11 @@ document.addEventListener("click",e=>{
     case "sm-next":ui.statMonth=shiftMonth(ui.statMonth,1);ui.sel.s_d=null;render();break;
     case "clear-exp":state.projects=state.projects.filter(p=>!p.example);persist();ui.proj=null;render();toast("예시 목표를 지웠어요");break;
     case "add-tx":openTx({pid:d.pid,item:d.item});break;
-    case "tx-edit":{const p=state.projects.find(x=>x.id===d.pid);const t=p&&p.tx.find(x=>x.id===d.id);if(t)openTx({edit:true,id:t.id,pid:p.id,item:t.itemId,amount:t.amount,memo:t.memo||"",date:t.date,fx:t.fx});break}
+    case "tx-edit":{const p=state.projects.find(x=>x.id===d.pid);const t=p&&p.tx.find(x=>x.id===d.id);if(t)openTx({edit:true,id:t.id,pid:p.id,item:t.itemId,amount:t.amount,memo:t.memo||"",date:t.date,fx:t.fx,photos:t.photos});break}
     case "new-proj":openProj(null);break;
+    case "ph-view":openViewer(d.id,!!(page&&page.kind==="tx"));break;
+    case "pv-close":if(el.classList.contains("pview")&&e.target!==el)return;document.getElementById("dlgSlot").innerHTML="";break;
+    case "ph-del":{if(page&&page.photos){page.photos=page.photos.filter(x=>x!==d.id);if((page.added||[]).includes(d.id)){page.added=page.added.filter(x=>x!==d.id);photoDel([d.id])}}document.getElementById("dlgSlot").innerHTML="";readTx();drawPage();toast("사진을 뺐어요");break}
     case "conv":sheet={kind:"conv",pid:d.id};drawSheet();loadRates();break;
     case "ratemode":{const p=state.projects.find(x=>x.id===d.id);p.rateMode=d.v;persist();render();break}
     case "fx-new":{const p=state.projects.find(x=>x.id===d.pid);page={kind:"fx",id:uid(),pid:p.id,cur:curOf(p),krw:0,foreign:0,date:todayKey,edit:false,confirm:false};drawPage();loadRates();break}
@@ -1177,9 +1215,9 @@ document.addEventListener("click",e=>{
     case "bk-export":exportData();break;
     case "bk-reset":askDelete("모든 기록을 지울까요?","모든 목표와 지출, 환전 기록이 삭제돼요. 백업 파일이 없다면 되돌릴 수 없어요.","bk-resetyes","모두 지우기");break;
     case "bk-resetno":sheet.confirm=false;drawSheet();break;
-    case "bk-resetyes":state={categories:[],months:{},example:false,projects:[],projSeeded:true};persist();sheet=null;drawSheet();ui.proj=null;ui.tab="goals";render();toast("모두 지웠어요");break;
+    case "bk-resetyes":ptx("readwrite",st=>{st.clear()}).catch(()=>{});state={categories:[],months:{},example:false,projects:[],projSeeded:true};persist();sheet=null;drawSheet();ui.proj=null;ui.tab="goals";render();toast("모두 지웠어요");break;
     case "s-close":sheet=null;drawSheet();break;
-    case "p-close":hidePad();page=null;drawPage();if(ui.proj&&sheet)drawSheet();break;
+    case "p-close":hidePad();if(page&&page.kind==="tx")photoDel(page.added||[]);page=null;drawPage();if(ui.proj&&sheet)drawSheet();break;
     case "q":page.amt=d.v==="0"?"":String(Math.round(((Number(page.amt)||0)+Number(d.v))*100)/100);document.getElementById("amtBox").innerHTML=amtHTML();break;
     case "pick":readTx();page.picker=d.v;drawPage();if(d.v==="cur")loadRates();break;
     case "pk-close":page.picker=null;drawPage();break;
@@ -1187,7 +1225,7 @@ document.addEventListener("click",e=>{
     case "t-save":commitTx();break;
     case "t-del":readTx();askDelete("이 지출을 삭제할까요?","삭제하면 되돌릴 수 없어요.","t-delyes");break;
     case "t-delno":page.confirm=false;drawPage();break;
-    case "t-delyes":removeTx(page.id);persist();page=null;drawPage();render();toast("삭제했어요");break;
+    case "t-delyes":{const rt=removeTx(page.id);photoDel([...(rt&&rt.photos||[]),...(page.added||[])])}persist();page=null;drawPage();render();toast("삭제했어요");break;
     case "pj-icon":readProj();page.icon=d.v;drawPage();break;
     case "pj-grad":readProj();page.grad=d.v;drawPage();break;
     case "pj-add":readProj();page.items.push({id:"i_"+uid(),name:"",budget:0,cur:page.cur||"KRW"});drawPage();setTimeout(()=>document.getElementById("pi_n_"+(page.items.length-1))?.focus(),30);break;
@@ -1195,7 +1233,7 @@ document.addEventListener("click",e=>{
     case "pj-del":readProj();askDelete("목표를 삭제하시겠습니까?",`'${esc(page.name||"이 목표")}'와 안에 있는 지출·환전 기록이 모두 삭제돼요.`,"pj-delyes");break;
     case "pj-delno":page.confirm=false;drawPage();break;
     case "pj-save":commitProj();break;
-    case "pj-delyes":{const id=page.id;state.projects=state.projects.filter(p=>p.id!==id);persist();page=null;drawPage();ui.proj=null;render();toast("목표를 삭제했어요");break}
+    case "pj-delyes":{const id=page.id;const gp=state.projects.find(p=>p.id===id);if(gp)photoDel(gp.tx.flatMap(t=>t.photos||[]));state.projects=state.projects.filter(p=>p.id!==id);persist();page=null;drawPage();ui.proj=null;render();toast("목표를 삭제했어요");break}
   }
 });
 document.addEventListener("click",e=>{const b=e.target.closest("#tpad [data-k]");if(!b||!page||page.kind!=="tx")return;const k=b.dataset.k;let cur=page.amt||"";
@@ -1209,7 +1247,10 @@ document.addEventListener("input",e=>{const t=e.target;
   if(t.hasAttribute&&t.hasAttribute("data-money")){const n=moneyVal(t.value);t.value=n?won(n):"";if((t.id==="fx_krw"||t.id==="fx_for")&&page&&page.kind==="fx"){readFx();const k=page.krw,f=page.foreign,live=liveKrwPer(page.cur);document.getElementById("fx_rate").textContent=k&&f?unitRate(page.cur,k/f):"-";document.getElementById("fx_cmp").textContent=k&&f&&live?`기준 환율 대비 ${(k/f)<=live?"유리하게":"불리하게"} ${Math.abs(((k/f)/live-1)*100).toFixed(1)}%`:"금액 두 개를 넣으면 환율이 자동 계산돼요"}
     if((t.id.startsWith("pi_b_")||t.id==="pj_tb")&&page){const had=!!page.total;readProj();if(!!page.total!==had){drawPage();const el=document.getElementById(t.id);if(el){el.focus()}}else updAlloc()}}
   if(t.id&&t.id.startsWith("pi_p_")&&page){readProj();updAlloc()}});
-document.addEventListener("change",e=>{const t=e.target;
+document.addEventListener("change",async e=>{const t=e.target;
+  if(t.id==="ph_in"&&t.files&&page&&page.kind==="tx"){readTx();const files=[...t.files].slice(0,6-(page.photos||[]).length);toast("사진을 넣는 중…");
+    for(const f of files){try{const b=await shrinkImage(f);const id="ph_"+uid();await photoPut(id,b);page.photos.push(id);page.added.push(id)}catch(err){toast("사진을 넣지 못했어요")}}
+    drawPage();return}
   if(t.id==="pj_cur"&&page&&page.kind==="proj"){const old=page.cur||"KRW";readProj();page.items.forEach(it=>{if(icur(it)===old)it.cur=page.cur});drawPage();if(page.cur!=="KRW")loadRates();return}
   if(t.id&&t.id.startsWith("pi_c_")&&page){readProj();if(page.alloc==="pct"&&page.total){drawPage();return}updAlloc();const tot=document.getElementById("pj_total");if(tot)tot.innerHTML=totalTxt(page);const b=document.getElementById("pi_b_"+t.id.slice(5));if(b)b.dataset.cur=t.value;if(t.value!=="KRW")loadRates();return}
   if(t.id==="bk_file"&&t.files&&t.files[0])importData(t.files[0]);
